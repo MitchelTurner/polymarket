@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Season {
+  year        Int         @id
+  windowStart DateTime?
+  windowEnd   DateTime?
+  status      String
+  releasedAt  DateTime?
+  results     YisResult[]
+}
+
+model Person {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  kgMid       String?     @unique
+  wikiArticle String?
+  isAlive     Boolean?
+  diedAt      DateTime?
+  categories  String[]    @default([])
+  homeCountry String?
+  notes       String?
+  aliases     Alias[]
+  results     YisResult[]
+}
+
+model Alias {
+  id        Int     @id @default(autoincrement())
+  personId  Int
+  person    Person  @relation(fields: [personId], references: [id], onDelete: Cascade)
+  term      String
+  foldedKey String
+  kind      String
+  ambiguous Boolean @default(false)
+
+  @@unique([personId, term])
+  @@index([foldedKey])
+}
+
+model YisResult {
+  id        Int     @id @default(autoincrement())
+  year      Int
+  season    Season  @relation(fields: [year], references: [year], onDelete: Cascade)
+  scope     String
+  list      String
+  rank      Int
+  personId  Int
+  person    Person  @relation(fields: [personId], references: [id])
+  sourceUrl String?
+
+  @@unique([year, scope, list, rank])
+  @@unique([year, scope, list, personId])
+}
+
+model RawFetch {
+  id        Int      @id @default(autoincrement())
+  source    String
+  fetchedAt DateTime @default(now())
+  url       String
+  payload   Json
+}
+
+model TrendPoint {
+  id        Int      @id @default(autoincrement())
+  personId  Int
+  observedAt DateTime
+  geo       String
+  value     Float
+  source    String
+  @@index([personId, observedAt])
+}
+
+model WikiPoint {
+  id         Int      @id @default(autoincrement())
+  personId   Int
+  observedAt DateTime
+  views      Int
+  source     String
+  @@index([personId, observedAt])
+}
+
+model Market {
+  id       Int             @id @default(autoincrement())
+  source   String
+  externalId String
+  question String
+  outcomes MarketOutcome[]
+  @@unique([source, externalId])
+}
+
+model MarketOutcome {
+  id        Int              @id @default(autoincrement())
+  marketId  Int
+  market    Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  name      String
+  snapshots MarketSnapshot[]
+  @@unique([marketId, name])
+}
+
+model MarketSnapshot {
+  id         Int           @id @default(autoincrement())
+  outcomeId  Int
+  outcome    MarketOutcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+  observedAt DateTime
+  probability Float?
+  @@index([outcomeId, observedAt])
+}
+
+model FeatureSnapshot {
+  id         Int      @id @default(autoincrement())
+  year       Int
+  personId   Int
+  observedAt DateTime
+  values     Json
+  @@index([year, personId, observedAt])
+}
+
+model Prediction {
+  id         Int      @id @default(autoincrement())
+  year       Int
+  personId   Int
+  createdAt  DateTime @default(now())
+  model      String
+  output     Json
+  @@index([year, personId])
+}
+
+model Backtest {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  model     String
+  parameters Json
+  results   Json
+}
