@@ -1,0 +1,17 @@
+{
+  "name": "@polymarket/year-in-search-shared",
+  "version": "0.1.0",
+  "description": "Untrained, dependency-free Year in Search modeling primitives",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": "./src/index.js",
+  "files": ["src"],
+  "scripts": {
+    "build": "node --check src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "ISC"
+}
